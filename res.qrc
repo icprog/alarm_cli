@@ -1,0 +1,21 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>accept.bmp</file>
+        <file>exit.bmp</file>
+        <file>refresh.bmp</file>
+    </qresource>
+    <qresource prefix="/icons">
+        <file>accept.ico</file>
+        <file>exit.ico</file>
+        <file>refresh.ico</file>
+        <file>edu_science_2446.ico</file>
+        <file>notepad_6536.ico</file>
+        <file>scrolldown_7711.ico</file>
+        <file>bell.ico</file>
+        <file>window_fullscreen.ico</file>
+        <file>window_nofullscreen.ico</file>
+    </qresource>
+    <qresource prefix="/wavs">
+        <file>alarm.wav</file>
+    </qresource>
+</RCC>
