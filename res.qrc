@@ -3,6 +3,12 @@
         <file>accept.bmp</file>
         <file>exit.bmp</file>
         <file>refresh.bmp</file>
+        <file>AnimRedArrow.gif</file>
+        <file>AnimRedArrow2.gif</file>
+        <file>AnimRedArrow3.gif</file>
+        <file>AnimRedArrow4.gif</file>
+        <file>AnimRedArrow5.gif</file>
+        <file>AnimRedArrow6.gif</file>
     </qresource>
     <qresource prefix="/icons">
         <file>accept.ico</file>

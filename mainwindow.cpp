@@ -1,17 +1,13 @@
 
 #include <QDesktopWidget>
 #include <QProcess>
-#include <QtMultimedia/QSound>
-#include <QtMultimedia/QMediaPlayer>
 #include <QFile>
 #include <QSettings>
+#include <QNetworkInterface>
+#include <QNetworkAddressEntry>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-
-AlarmClient *alarmClient;
-QSound *sound;
-
 
 //==================================================
 MainWindow::MainWindow(QWidget *parent) :
@@ -27,6 +23,8 @@ MainWindow::MainWindow(QWidget *parent) :
     settings.beginGroup("Main");
     QString IP=settings.value("IP").toString();
     uint port=settings.value("Port").toInt();
+    reportCmd=settings.value("Report","Cpp_reporter.exe alarms_rep.ini").toString();
+    alwaysStayOnTop=settings.value("AlwaysStayOnTop",1).toInt();
 
     alarmClient=new AlarmClient(IP,port);
 
@@ -48,19 +46,53 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QRect screen=QApplication::desktop()->availableGeometry();
 
-    this->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+    if (alwaysStayOnTop)
+    {
+        this->setWindowFlags(Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+    }
+    else
+    {
+        this->setWindowFlags(/*Qt::WindowStaysOnTopHint | */Qt::FramelessWindowHint);
+    }
 
     this->setGeometry(screen.width() - this->size().width(),screen.height() - this->size().height(),this->size().width(),this->size().height());
+
 
     sound=new QSound(":/wavs/alarm.wav"); //from resources
     sound->setLoops(QSound::Infinite);
 
+    //Allow acknowledge alarms only from IPs that present in ini file
+    //example IpAllowedAck=172.16.4.23;172.16.49.200
+    //to allow all use IpAllowedAck=127.0.0.1
+
+    QString IpAllowedAck=settings.value("IpAllowedAck").toString();
+
+    //found network interfaces
+    QList<QNetworkInterface> ni_list=QNetworkInterface::allInterfaces();
+    foreach(QNetworkInterface ni, ni_list)
+    {
+        QList<QNetworkAddressEntry> nae_list=ni.addressEntries();
+        foreach(QNetworkAddressEntry nae,nae_list)
+        {
+            qDebug() << "found interface, IP=" << nae.ip().toString();
+            if (IpAllowedAck.contains(nae.ip().toString()))
+            {
+                ui->buttonConfirm->setEnabled(true);
+            }
+        }
+    }
+
+    ui->labelBiggerThen5Alarms->setVisible(false);
+    movie = new QMovie(":/images/AnimRedArrow6.gif");
+    ui->labelBiggerThen5Alarms->setMovie(movie);
 }
 //==================================================
 MainWindow::~MainWindow()
 {
     delete alarmClient;
     delete sound;  //added 12.03.2016
+    movie->stop();
+    delete movie;
     delete ui;
 }
 //==================================================
@@ -130,6 +162,18 @@ void MainWindow::alarmsChanged(QList < alarm_message_struct > EnabledAlarmList, 
             }
         ++i;
         }
+        //down arow is signalized then alarms > 5 and they are not all visible in list
+        if (EnabledAlarmList.size()>5)
+        {
+            ui->labelBiggerThen5Alarms->setVisible(true);
+            movie->start();
+        }
+        else
+        {
+            movie->stop();
+            ui->labelBiggerThen5Alarms->setVisible(false);
+        }
+
     }
     else  //мигание
     {
@@ -173,10 +217,41 @@ void MainWindow::TimerBlinkerEvent()
             if (sound->isFinished())
             sound->play();
             is_active_alarms=true;
+
+            //когда есть активные алармы - окно всегда сверху всех
+            if (!alwaysStayOnTop)
+            {
+                Qt::WindowFlags flags = this->windowFlags();
+                if(!(flags & Qt::WindowStaysOnTopHint))
+                {
+                    flags ^= Qt::WindowStaysOnTopHint;
+                    this->setWindowFlags(flags);
+                    this->show();
+                    this->activateWindow();
+                }
+            }
         }
     }
 
-    if (!is_active_alarms) sound->stop();  //нет активных алармов, выключаем сирену
+    if (!is_active_alarms)
+    {
+        sound->stop();  //нет активных алармов, выключаем сирену
+        //окно можно спрятать за остальные
+        if (!alwaysStayOnTop)
+        {
+            //if (this->windowFlags() | Qt::WindowStaysOnTopHint)
+            Qt::WindowFlags flags = this->windowFlags();
+            if(flags & Qt::WindowStaysOnTopHint)
+            {
+                flags |= Qt::WindowStaysOnBottomHint;
+                flags ^= Qt::WindowStaysOnTopHint;
+                this->setWindowFlags(flags);
+                this->show();
+                this->activateWindow();
+            }
+        }
+
+    }
 }
 //===============================================================
 void MainWindow::ButtonConfirmClicked()
@@ -186,6 +261,7 @@ void MainWindow::ButtonConfirmClicked()
       if( !(alarmClient->enabledAlarmsList.at(0).confirmed) )
         alarmClient->ConfirmAlarm(alarmClient->enabledAlarmsList.at(0));
   }
+
 }
 //================================================================
 void MainWindow::ButtonExpandClicked()
@@ -217,6 +293,6 @@ void MainWindow::DisconnectedState()
 //===============================================================
 void MainWindow::ButtonReportClicked()
 {
-    QProcess::startDetached("Cpp_reporter.exe alarms_rep.ini");
+    QProcess::startDetached(reportCmd);
 }
 //================================================================

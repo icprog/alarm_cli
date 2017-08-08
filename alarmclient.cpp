@@ -86,9 +86,12 @@ void AlarmClient::readyRead()
     {
         socket->read((char *)&alarm_message,sizeof(alarm_message_struct));
         emit MessageFromServer(alarm_message);
-        qDebug() << alarm_message.ID << "  " << alarm_message.text;
+        qDebug() << alarm_message.ID << "  " << alarm_message.text << "colors: " <<
+                    "(" << alarm_message.actColor_r << "," << alarm_message.actColor_g << "," << alarm_message.actColor_b << ")" <<
+                    "(" << alarm_message.act2Color_r << "," << alarm_message.act2Color_g << "," << alarm_message.act2Color_b << ")" <<
+                    "(" << alarm_message.nonactColor_r << "," << alarm_message.nonactColor_g << "," << alarm_message.nonactColor_b << ")";
     }
-    if (socket->bytesAvailable()>0 && socket->bytesAvailable()<sizeof(alarm_message_struct))  //осталось байт не кратное одной посылке, - херня,ошибка, не тот сервер
+    if (socket->bytesAvailable()>0 && socket->bytesAvailable()<sizeof(alarm_message_struct))  //осталось байт не кратное одной посылке, - ,ошибка, не тот сервер
     {
         socket->disconnectFromHost();
     }

@@ -3,6 +3,9 @@
 
 #include <QMainWindow>
 #include <QTimer>
+#include <QMovie>
+#include <QtMultimedia/QSound>
+#include <QtMultimedia/QMediaPlayer>
 
 #include "alarmclient.h"
 
@@ -21,8 +24,15 @@ public:
 
     QTimer timerBlinker;
 
+
+    AlarmClient *alarmClient;
+    QSound *sound;
+    QString reportCmd;
+    int alwaysStayOnTop;
+
 private:
     Ui::MainWindow *ui;
+    QMovie *movie;
 
 public slots:
     void ReadMessageFromServer(alarm_message_struct alarm_message);
