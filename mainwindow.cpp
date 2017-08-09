@@ -25,6 +25,7 @@ MainWindow::MainWindow(QWidget *parent) :
     uint port=settings.value("Port").toInt();
     reportCmd=settings.value("Report","Cpp_reporter.exe alarms_rep.ini").toString();
     alwaysStayOnTop=settings.value("AlwaysStayOnTop",1).toInt();
+    widthStretch==settings.value("WidthStretch",0).toInt();
 
     alarmClient=new AlarmClient(IP,port);
 
@@ -55,7 +56,16 @@ MainWindow::MainWindow(QWidget *parent) :
         this->setWindowFlags(/*Qt::WindowStaysOnTopHint | */Qt::FramelessWindowHint);
     }
 
-    this->setGeometry(screen.width() - this->size().width(),screen.height() - this->size().height(),this->size().width(),this->size().height());
+    if (widthStretch)
+    {
+        this->setGeometry(0,screen.height() - this->size().height(),screen.width(),this->size().height());
+    }
+    else
+    {
+        this->setGeometry(screen.width() - this->size().width(),screen.height() - this->size().height(),this->size().width(),this->size().height());
+    }
+
+
 
 
     sound=new QSound(":/wavs/alarm.wav"); //from resources

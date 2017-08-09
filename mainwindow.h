@@ -29,6 +29,7 @@ public:
     QSound *sound;
     QString reportCmd;
     int alwaysStayOnTop;
+    int widthStretch;
 
 private:
     Ui::MainWindow *ui;
